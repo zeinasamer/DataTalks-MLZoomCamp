@@ -1,41 +1,29 @@
 import pickle
 
+import uvicorn
+from fastapi import FastAPI
+
+app = FastAPI(title="churn-prediction")
+
 with open('model.bin', 'rb') as f_in:
     pipeline = pickle.load(f_in)
 
 
+def predict_single(costumer):
+    result = pipeline.predict_proba([costumer])[0, 1]
+    return float(result)
 
-costumer = {
-    'gender': 'female',
-    'seniorcitizen': 0,
-    'partner': 'yes',
-    'dependents': 'no',
-    'phoneservice': 'no',
-    'multiplelines': 'no_phone_service',
-    'internetservice': 'dsl',
-    'onlinesecurity': 'no',
-    'onlinebackup': 'yes',
-    'deviceprotection': 'no',
-    'techsupport': 'no',
-    'streamingtv': 'no',
-    'streamingmovies': 'no',
-    'contract': 'month-to-month',
-    'paperlessbilling': 'yes',
-    'paymentmethod': 'electronic_check',
-    'tenure': 1,
-    'monthlycharges': 29.85,
-    'totalcharges': 29.85
-}
+@app.post("/predict")
+def predict(costumer):
+    prob = predict_single(costumer)
 
+    return{
+        "churn_probability" : prob,
+        "churn" : bool(prob >= 0.5)
+    }
 
-churn = pipeline.predict_proba([costumer])[0, 1]
-print('prob of churn =',churn)
-
-if churn >= 0.5:
-    print('send email with promo')
-else:
-    print('dont do anything')
-
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=9696)
 
 
 
