@@ -1,7 +1,10 @@
 import pickle
 
+from typing import Dict, Any
+
 import uvicorn
 from fastapi import FastAPI
+from pydantic import BaseModel, Field
 
 app = FastAPI(title="churn-prediction")
 
@@ -14,8 +17,8 @@ def predict_single(costumer):
     return float(result)
 
 @app.post("/predict")
-def predict(costumer):
-    prob = predict_single(costumer)
+def predict(customer: Dict[str, Any]):
+    prob = predict_single(customer)
 
     return{
         "churn_probability" : prob,
